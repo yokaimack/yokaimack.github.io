@@ -1,189 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Cadastro de Viagens</title>
+  <meta charset="UTF-8">
+  <title>Cadastro de Viagens</title>
+
+  <link rel="stylesheet" href="main.css">
 </head>
+
 <body>
 
-    <h2>CADASTRO DE VIAGENS</h2>
+  <div class="container">
+    <h2>🚍 Cadastro de Viagens</h2>
 
-    <input type="text" id="Carro" placeholder="Carro">
-    <input type="text" id="Linha" placeholder="Linha">
-    <input type="text" id="Horario" placeholder="Horário">
-    <input type="text" id="Motivo" placeholder="Motivo">
+    <div class="inputs-row">
+      <input type="text" id="Carro" placeholder="Carro">
+      <input type="text" id="Linha" placeholder="Linha">
+      <input type="text" id="Horario" placeholder="Horário">
+      <input type="text" id="Motivo" placeholder="Motivo">
 
-    <select id="ativo">
+      <select id="ativo">
         <option value="true">Ativo</option>
         <option value="false">Inativo</option>
-    </select>
+      </select>
+    </div>
 
-    <br><br>
-
-    <button onclick="cadastrar()">Cadastrar / Salvar</button>
-    <button onclick="limpar()">Limpar</button>
+    <div class="buttons-row">
+      <button onclick="cadastrar()">Cadastrar / Salvar</button>
+      <button class="secondary" onclick="limpar()">Limpar</button>
+    </div>
 
     <hr>
 
     <h3>Lista de Cadastros</h3>
     <ul id="lista"></ul>
 
-    <button onclick="exportarPDF()">📄 Exportar PDF</button>
-    <button onclick="exportarExcel()">📊 Exportar Excel</button>
+    <div class="buttons-row">
+      <button onclick="exportarPDF()">📄 Exportar PDF</button>
+      <button onclick="exportarExcel()">📊 Exportar Excel</button>
+    </div>
+  </div>
 
-    <!-- PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- LIBS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    <!-- EXCEL -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <!-- SEU SCRIPT -->
+  <script src="script.js"></script>
 
-    <script>
-// LISTA DE VIAGENS
-let viagens = [];
-
-// CONTROLA EDIÇÃO
-let indiceEdicao = null;
-
-// CADASTRAR OU EDITAR
-function cadastrar() {
-    let carro = document.getElementById("Carro").value;
-    let linha = document.getElementById("Linha").value;
-    let horario = document.getElementById("Horario").value;
-    let motivo = document.getElementById("Motivo").value;
-    let ativo = document.getElementById("ativo").value;
-
-    if (carro === "" || linha === "" || horario === "" || motivo === "") {
-        alert("Preencha todos os campos!");
-        return;
-    }
-
-    let viagem = {
-        carro,
-        linha,
-        horario,
-        motivo,
-        ativo: ativo === "true"
-    };
-
-    if (indiceEdicao === null) {
-        // NOVO CADASTRO
-        viagens.push(viagem);
-    } else {
-        // EDIÇÃO
-        viagens[indiceEdicao] = viagem;
-        indiceEdicao = null;
-    }
-
-    atualizarLista();
-    limpar();
-}
-
-// MOSTRAR LISTA
-function atualizarLista() {
-    let lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
-    for (let i = 0; i < viagens.length; i++) {
-        lista.innerHTML += `
-            <li>
-                🚍 Carro: ${viagens[i].carro} |
-                Linha: ${viagens[i].linha} |
-                Horário: ${viagens[i].horario} |
-                Motivo: ${viagens[i].motivo} |
-                Status: ${viagens[i].ativo ? "Ativo" : "Inativo"}
-                <button onclick="editar(${i})">✏️</button>
-                <button onclick="remover(${i})">❌</button>
-            </li>
-        `;
-    }
-}
-
-// EDITAR
-function editar(index) {
-    let viagem = viagens[index];
-
-    document.getElementById("Carro").value = viagem.carro;
-    document.getElementById("Linha").value = viagem.linha;
-    document.getElementById("Horario").value = viagem.horario;
-    document.getElementById("Motivo").value = viagem.motivo;
-    document.getElementById("ativo").value = viagem.ativo ? "true" : "false";
-
-    indiceEdicao = index;
-}
-
-// REMOVER
-function remover(index) {
-    viagens.splice(index, 1);
-    atualizarLista();
-}
-
-// LIMPAR CAMPOS
-function limpar() {
-    document.getElementById("Carro").value = "";
-    document.getElementById("Linha").value = "";
-    document.getElementById("Horario").value = "";
-    document.getElementById("Motivo").value = "";
-    document.getElementById("ativo").value = "true";
-    indiceEdicao = null;
-}
-
-function exportarExcel() {
-    if (viagens.length === 0) {
-        alert("Nenhuma viagem cadastrada!");
-        return;
-    }
-
-    const dados = viagens.map(v => ({
-        Carro: v.carro,
-        Linha: v.linha,
-        Horário: v.horario,
-        Motivo: v.motivo,
-        Status: v.ativo ? "Ativo" : "Inativo"
-    }));
-
-    const planilha = XLSX.utils.json_to_sheet(dados);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, planilha, "Viagens");
-    XLSX.writeFile(workbook, "viagens.xlsx");
-}
-
-function exportarPDF() {
-    if (viagens.length === 0) {
-        alert("Nenhuma viagem cadastrada!");
-        return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("Relatório de Viagens", 10, 10);
-
-    doc.setFontSize(10);
-
-    let y = 20;
-
-    viagens.forEach((v, i) => {
-        doc.text(
-            `${i + 1}. Carro: ${v.carro} | Linha: ${v.linha} | Horário: ${v.horario} | Motivo: ${v.motivo} | Status: ${v.ativo ? "Ativo" : "Inativo"}`,
-            10,
-            y
-        );
-        y += 8;
-
-        if (y > 280) {
-            doc.addPage();
-            y = 20;
-        }
-    });
-
-    doc.save("viagens.pdf");
-}
-
-
-
-
-    </script>
 </body>
 </html>
